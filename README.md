@@ -1,5 +1,6 @@
 # Applied AI – CodePath x Anthropic
 ![CodePath x Anthropic](./banner.jpeg)
+
 Weekly hands-on exercises from the **Applied AI** course, a collaboration between [CodePath](https://www.codepath.org/) and [Anthropic](https://www.anthropic.com/). Each session focuses on building practical skills with large language models through real coding challenges.
 
 **Stack:** Python · Claude API · Streamlit
