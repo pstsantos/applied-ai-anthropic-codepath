@@ -1,31 +1,31 @@
-classDiagram
-    class Customer {
-        +String name
-        +List~Order~ purchaseHistory
-    }
-
-    class MenuItem {
-        +String name
-        +Float price
-        +String category
-        +Float popularityRating
-    }
-
-    class Menu {
-        +List~MenuItem~ items
-        +filterByCategory(category: String) List~MenuItem~
-    }
-
-    class Order {
-        +List~MenuItem~ selectedItems
-        +computeTotal() Float
-    }
-
-    class Validation {
-        +verifyCustomer(customer: Customer) Boolean
-    }
-
-    Customer "1" --> "0..*" Order : places
-    Order "1" o-- "1..*" MenuItem : contains
-    Menu "1" *-- "1..*" MenuItem : holds
-    Validation ..> Customer : validates
+┌─────────────────────────┐          ┌─────────────────────────┐
+│       UserAccount       │          │          Menu           │
+├─────────────────────────┤          ├─────────────────────────┤
+│ - name: String          │          │ - items: List<Item>     │
+│ - purchaseHistory:      │          ├─────────────────────────┤
+│     List<Order>         │          │ + addItem(Item)         │
+├─────────────────────────┤          │ + removeItem(Item)      │
+│ + isVerifiedUser(): bool│          │ + filterByCategory(     │
+└─────────────────────────┘          │     String): List<Item> │
+           │                         └─────────────────────────┘
+           │ places                             │ contains
+           ▼                                    ▼
+┌─────────────────────────┐          ┌─────────────────────────┐
+│          Order          │          │          Item           │
+├─────────────────────────┤          ├─────────────────────────┤
+│ - items: List<OrderItem>│          │ - name: String          │
+├─────────────────────────┤          │ - price: Float          │
+│ + addItem(OrderItem)    │          │ - category: String      │
+│ + computeTotal(): Float │          │ - popularityRating: Int │
+└─────────────────────────┘          └─────────────────────────┘
+           │                                    ▲
+           │ contains                           │ references
+           ▼                                    │
+┌─────────────────────────┐                     │
+│        OrderItem        │─────────────────────┘
+├─────────────────────────┤
+│ - item: Item            │
+│ - quantity: Int         │
+├─────────────────────────┤
+│ + getSubtotal(): Float  │
+└─────────────────────────┘
