@@ -4,6 +4,11 @@
 
 **a. Initial design**
 
+- Core actions :
+1. Add Pet
+2. Schedule walk
+3. See today's tasks 
+
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
