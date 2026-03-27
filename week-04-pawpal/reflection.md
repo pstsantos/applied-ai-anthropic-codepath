@@ -4,7 +4,60 @@
 
 **a. Initial design**
 
-- Core actions :
+- Candidate classes 
+
+1 - User
+
+Attributes : main_ownerName, household_ownerName, phone (for texts/ notifications), email, hours available
+
+// household_ownerName, in case a couple or a family of more than 1 decides to have a shared account, track other owners too.
+
+Actions : 
+- Add user (name, phone, email, and normalized schedule)
+- Add household members
+- Select main user 
+- MixSchedules (optional // for household option)
+
+2 - Pet
+
+Attributes : petName, age, breed, vetName, vetPhone
+
+Actions:
+- Add Pet (petName, age, breed, vetName, vetPhone)
+- Remove pet (in case you are temp hosting a pet)
+
+3 - Tasks
+
+Attributes : main_ownerName, household_ownerName, petName, feed, water, feedCount, waterCount, shortWalkCount, longWalkCount
+
+Actions: 
+- schedule walk (show who’s available)
+- schedule Feed (show who’s available)
+- schedule Water (show who’s available)
+- schedule Appt (show who’s available)
+- logFeed
+- logWater
+- logWalk
+- logAppt
+- seeTodaysTask
+
+4 - Analytics 
+
+Attributes : main_ownerName, household_ownerName, petName, feed, water, feedCount, waterCount, shortWalkCount, longWalkCount
+
+Actions : 
+- dietStatDailyAvg
+- dietStatMonthAvg
+- dietStatYearAvg
+- exerciseStatDailyAvg
+- exerciseStatMonthAvg
+- exerciseStatYearAvg
+- waterStatDailyAvg
+- waterStatStatMonthAvg
+- waterStatYearAvg
+- medicineStat (optional)
+
+Core actions :
 1. Add Pet
 2. Schedule walk
 3. See today's tasks 
