@@ -14,6 +14,7 @@ Weekly hands-on exercises from the **Applied AI** course, a collaboration betwee
 | 01 | [Playlist Chaos](./week-01-playlist-chaos) | AI-assisted debugging, prompt engineering, Python |
 | 02 | [Game Glitch Investigator](./week-02-gameglitch-investigator) | Claude API, AI-powered debugging, Streamlit |
 | 03 | [ByteBites](./week-03-bytebites) | OOP design, UML diagrams, Python classes, AI collaboration |
+| 04 | [PawPal](./week-04-pawpal) | Streamlit applications, AI integration, project development |
 
 *Updated weekly throughout the course.*
 
