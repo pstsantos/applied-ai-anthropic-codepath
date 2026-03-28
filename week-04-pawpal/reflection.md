@@ -4,71 +4,41 @@
 
 **a. Initial design**
 
-- Candidate classes 
-
-1 - User
-
-Attributes : main_ownerName, household_ownerName, phone (for texts/ notifications), email, hours available
-
-// household_ownerName, in case a couple or a family of more than 1 decides to have a shared account, track other owners too.
-
-Actions : 
-- Add user (name, phone, email, and normalized schedule)
-- Add household members
-- Select main user 
-- MixSchedules (optional // for household option)
-
-2 - Pet
-
-Attributes : petName, age, breed, vetName, vetPhone
-
-Actions:
-- Add Pet (petName, age, breed, vetName, vetPhone)
-- Remove pet (in case you are temp hosting a pet)
-
-3 - Tasks
-
-Attributes : main_ownerName, household_ownerName, petName, feed, water, feedCount, waterCount, shortWalkCount, longWalkCount
-
-Actions: 
-- schedule walk (show who’s available)
-- schedule Feed (show who’s available)
-- schedule Water (show who’s available)
-- schedule Appt (show who’s available)
-- logFeed
-- logWater
-- logWalk
-- logAppt
-- seeTodaysTask
-
-4 - Analytics 
-
-Attributes : main_ownerName, household_ownerName, petName, feed, water, feedCount, waterCount, shortWalkCount, longWalkCount
-
-Actions : 
-- dietStatDailyAvg
-- dietStatMonthAvg
-- dietStatYearAvg
-- exerciseStatDailyAvg
-- exerciseStatMonthAvg
-- exerciseStatYearAvg
-- waterStatDailyAvg
-- waterStatStatMonthAvg
-- waterStatYearAvg
-- medicineStat (optional)
-
 Core actions :
-1. Add Pet
-2. Schedule walk
-3. See today's tasks 
+1. Create/ Add User (to Household)
+2. Create/ Add Pet (to Household)
+3. Create/ Add Tasks (to Household)
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+ Main idea:
+ I envisioned this app to be a tool to serve at least one person, but with multi-person capability. The main design lives inside the class Household. The anatomy of household is straighfowards, Users and Pets live inside one in the code as well. In this Household at least at least one user needs to exist to managed at least one pet. 
+    - User Class:
+    The User class contains crucial info on user, personal info and schedule (the key driver of the app - time management), it is possible to add multiple people to a household, delete them, and for each on setup and manage their schedule and time they want to/ can dedicate to their Pet. 
+    * extra functionality : If they run into scheduling issues they may ping another household user and request help
+
+    - Pet Class:
+    The Pet class contains crucial info on the household's pet. Pets can be created, added to a household and also removed - in case household is petsitting or even temporarily sheltering a pet. 
+
+    - Task Class: 
+    The Task class manages User-Pet tasks by engaging and extracting their data. It keeps track of scheduling, status and completion of each task.
+
+    Supporting classes :
+    * TaskLog Class: Supports accountability and tracking which tasks got done, when and by who. It can also support a future Analytics class.
+    * Notification Class: It handles the ping operations, by sending, accepting or decling a ping by another household member. 
+    * Scheduler Class: The key impact of this class is to facilitate decision making when user needs to ping someone - it allows user to see who is available to cover a shift if they run into a schedule conflict.
+
+
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+ I had to make some iterations on how I wanted to handle Scheduling, initially I was conflicted over how it would be handled, I did not think it was reasonable for someone to assign household members a task in addition to their own task, or have multiple household members assign tasks to multiple household members, both of these solutions looked way too complex for a small project and also tedious, and even unconveninet, as a user to have so many responsibities. So I decided to instead come up with the ping operation - keeping users responsibilities loosely couples while allowing them to handle circumstances where they need to reschedule and request help from someone in the household. 
+ User case 1 -
+ User case 2 - 
+
+    
 
 ---
 
