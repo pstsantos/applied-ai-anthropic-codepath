@@ -15,6 +15,8 @@ defaults = {
     "notif_counter":    1,
     "member_counter":   2,   # owner is always u1
     "pinging_task_id":  None,
+    "pet_form_counter": 0,   # incremented after each pet add to reset form
+    "pet_warning":      None, # persists warning message across rerun
 }
 for key, val in defaults.items():
     if key not in st.session_state:
@@ -113,20 +115,32 @@ with st.sidebar:
                 st.write(f"**Age:** {pet.age}")
                 st.write(f"**Vet:** {pet.vetName or '—'}")
                 st.write(f"**Vet phone:** {pet.vetPhone or '—'}")
+                if st.button("🗑️ Remove pet", key=f"remove_pet_{pet.petId}", use_container_width=True):
+                    pet.removePet(household)
+                    st.success(f"✅ {pet.name} removed from household.")
+                    st.rerun()
     else:
         st.caption("No pets yet.")
 
+    # Show persisted vet warning after rerun
+    if st.session_state.pet_warning:
+        st.warning(st.session_state.pet_warning)
+        st.session_state.pet_warning = None
+
     with st.expander("+ Add a pet"):
-        with st.form("sidebar_pet_form"):
-            s_pet_name  = st.text_input("Name",      placeholder="Mochi")
-            s_pet_breed = st.text_input("Breed",     placeholder="Shiba Inu")
-            s_pet_age   = st.number_input("Age", min_value=0, max_value=30, value=1)
-            s_vet_name  = st.text_input("Vet name",  placeholder="Dr. Kim (optional)")
-            s_vet_phone = st.text_input("Vet phone", placeholder="555-9001 (optional)")
+        fc = st.session_state.pet_form_counter
+        with st.form(f"sidebar_pet_form_{fc}"):
+            s_pet_name  = st.text_input("Name",      placeholder="Mochi", key=f"pet_name_{fc}")
+            s_pet_breed = st.text_input("Breed",     placeholder="Shiba Inu", key=f"pet_breed_{fc}")
+            s_pet_age   = st.number_input("Age", min_value=0, max_value=30, value=1, key=f"pet_age_{fc}")
+            s_vet_name  = st.text_input("Vet name",  placeholder="Dr. Kim (optional)", key=f"vet_name_{fc}")
+            s_vet_phone = st.text_input("Vet phone", placeholder="555-9001 (optional)", key=f"vet_phone_{fc}")
             add_pet_btn = st.form_submit_button("Add pet", use_container_width=True)
 
         if add_pet_btn and s_pet_name:
             pid = f"p{len(household.pets) + 1}"
+            has_incomplete_vet = (s_vet_name and not s_vet_phone) or (s_vet_phone and not s_vet_name)
+            
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
                 new_pet = Pet(
@@ -135,10 +149,10 @@ with st.sidebar:
                     vetName=s_vet_name or None, vetPhone=s_vet_phone or None,
                 )
             new_pet.addPet(household)
+
             if not s_vet_name or not s_vet_phone:
-                st.warning(f"No vet info for {s_pet_name} — recommended.")
-            else:
-                st.success(f"{s_pet_name} added!")
+                st.session_state.pet_warning = f"⚠️ {s_pet_name} added, but no complete vet info provided — recommended."
+            st.session_state.pet_form_counter += 1
             st.rerun()
 
     st.divider()
@@ -146,7 +160,13 @@ with st.sidebar:
     # Members list
     st.markdown("**👥 Members**")
     for m in household.members:
-        st.caption(f"• {m.name}")
+        with st.expander(m.name):
+            st.write(f"**Email:** {m.email or '—'}")
+            st.write(f"**Phone:** {m.phone or '—'}")
+            if m.userId != owner.userId:
+                if st.button("🗑️ Remove member", key=f"remove_member_{m.userId}", use_container_width=True):
+                    household.removeMember(m)
+                    st.rerun()
 
     with st.expander("+ Add member"):
         with st.form("add_member_form"):
@@ -224,58 +244,56 @@ sorted_tasks = sorted(st.session_state.tasks, key=lambda t: t.scheduledTime)
 if not sorted_tasks:
     st.info("No tasks yet — add one above.")
 else:
+    col_w = [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+
     # Header row
-    h1, h2, h3, h4, h5, h6, h7, h8 = st.columns([2, 3, 2, 2, 2, 2, 3, 1])
-    for col, label in zip(
-        [h1, h2, h3, h4, h5, h6, h7, h8],
-        ["Time", "Task", "Pet", "Assigned to", "Status", "Complete", "Ping", ""],
-    ):
+    header_cols = st.columns(col_w)
+    for col, label in zip(header_cols, ["Time", "Task", "Pet", "Assigned to", "Status", "✅", "📣", "🗑️"]):
         col.markdown(f"**{label}**")
     st.divider()
 
+    # Data rows
     for task in sorted_tasks:
-        with st.container(border=True):
-            c1, c2, c3, c4, c5, c6, c7, c8 = st.columns([2, 3, 2, 2, 2, 2, 3, 1])
-            c1.write(task.scheduledTime.strftime("%I:%M %p"))
-            c2.write(task.taskType)
-            c3.write(pet_lookup.get(task.petId, "?"))
-            c4.write(task.assignedTo.name)
+        pet_name      = pet_lookup.get(task.petId, "?")
+        other_members = [m for m in household.members if m.userId != task.assignedTo.userId]
+        task_notif    = next(
+            (n for n in reversed(st.session_state.notifications) if n.taskId == task.taskId),
+            None,
+        )
+        cols = st.columns(col_w)
 
-            if task.status == "completed":
-                c5.success("Done ✅")
-            else:
-                c5.warning(task.status)
+        cols[0].write(task.scheduledTime.strftime("%I:%M %p"))
+        cols[1].write(task.taskType)
+        cols[2].write(pet_name)
+        cols[3].write(task.assignedTo.name)
 
-            # Mark complete
-            if task.status != "completed":
-                if c6.button("✅ Complete", key=f"complete_{task.taskId}"):
-                    task.markCompleted()
-                    st.rerun()
+        if task.status == "completed":
+            cols[4].success("Done ✅")
+        elif task_notif:
+            if task_notif.status == "sent":
+                cols[4].info("⏳ Pending")
+            elif task_notif.status == "accepted":
+                cols[4].success("✅ Accepted")
+            elif task_notif.status == "declined":
+                cols[4].error("❌ Declined")
+        else:
+            cols[4].warning("Scheduled")
 
-            # Ping column — shows live notification status if one exists, button otherwise
-            other_members = [m for m in household.members if m.userId != task.assignedTo.userId]
-            task_notif = next(
-                (n for n in reversed(st.session_state.notifications) if n.taskId == task.taskId),
-                None,
-            )
-            if task_notif:
-                if task_notif.status == "sent":
-                    c7.info("⏳ Pending")
-                elif task_notif.status == "accepted":
-                    c7.success("✅ Accepted")
-                elif task_notif.status == "declined":
-                    c7.error("❌ Declined")
-            elif other_members and task.status != "completed":
-                if c7.button("📣 Ping member", key=f"ping_{task.taskId}"):
-                    st.session_state.pinging_task_id = task.taskId
-                    st.rerun()
-
-            # Delete
-            if c8.button("🗑️", key=f"delete_{task.taskId}"):
-                st.session_state.tasks = [
-                    t for t in st.session_state.tasks if t.taskId != task.taskId
-                ]
+        if task.status != "completed":
+            if cols[5].button("✅", key=f"complete_{task.taskId}", help="Mark complete"):
+                task.markCompleted()
                 st.rerun()
+
+        if other_members and task.status != "completed" and not task_notif:
+            if cols[6].button("📣", key=f"ping_{task.taskId}", help="Ping member"):
+                st.session_state.pinging_task_id = task.taskId
+                st.rerun()
+
+        if cols[7].button("🗑️", key=f"delete_{task.taskId}", help="Remove task"):
+            st.session_state.tasks = [
+                t for t in st.session_state.tasks if t.taskId != task.taskId
+            ]
+            st.rerun()
 
 
 # ── MAIN: Ping Form ────────────────────────────────────────────────────────────
@@ -340,6 +358,12 @@ if st.session_state.notifications:
                 col_a, col_d, _ = st.columns([1, 1, 2])
                 if col_a.button("Accept",  key=f"accept_{notif.pingId}"):
                     notif.acceptPing()
+                    # Reassign task to the person who accepted the ping
+                    for task in st.session_state.tasks:
+                        if task.taskId == notif.taskId:
+                            task.reassignTask(notif.toUser)
+                            st.success(f"✅ Task reassigned to {notif.toUser.name}!")
+                            break
                     st.rerun()
                 if col_d.button("Decline", key=f"decline_{notif.pingId}"):
                     notif.declinePing()
