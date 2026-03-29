@@ -88,22 +88,56 @@ vet_checkup = Task(
     status="scheduled",
 )
 
-all_tasks = [morning_walk, feeding, vet_checkup, evening_walk]
+# Intentionally out of order to prove sorting works
+all_tasks = [evening_walk, vet_checkup, morning_walk, feeding]
 
-# --- Print Today's Schedule ---
+scheduler = Scheduler(household=household, tasks=all_tasks)
 
 pet_lookup = {pet.petId: pet.name for pet in household.pets}
 
-print("=" * 40)
-print(f"  TODAY'S SCHEDULE — {today.strftime('%A, %b %d')}")
-print(f"  Household: {household.name}")
-print("=" * 40)
 
-for task in sorted(all_tasks, key=lambda t: t.scheduledTime):
-    pet_name = pet_lookup.get(task.petId, "Unknown Pet")
-    time_str = task.scheduledTime.strftime("%I:%M %p")
-    print(f"  {time_str}  |  {task.taskType:<20} |  {pet_name:<10}  |  {task.status}")
+def print_tasks(tasks, label):
+    print("=" * 50)
+    print(f"  {label}")
+    print("=" * 50)
+    if not tasks:
+        print("  (no tasks)")
+    for task in tasks:
+        pet_name = pet_lookup.get(task.petId, "?")
+        time_str = task.scheduledTime.strftime("%I:%M %p")
+        print(f"  {time_str}  |  {task.taskType:<20} |  {pet_name:<10}  |  {task.status}")
+    print("=" * 50)
 
-print("=" * 40)
-print(f"  Owner: {owner.name}    Pets: {len(household.pets)}    Tasks: {len(all_tasks)}")
-print("=" * 40)
+
+# 1 — Raw order (unsorted) to show the starting state
+print_tasks(all_tasks, "RAW ORDER (as added)")
+
+# 2 — Sorted by time using Scheduler.sort_by_time()
+print_tasks(scheduler.sort_by_time(), "SORTED BY TIME — scheduler.sort_by_time()")
+
+# 3 — Filter: scheduled tasks only
+print_tasks(
+    scheduler.filter_tasks(status="scheduled"),
+    "FILTER — status='scheduled'",
+)
+
+# Mark one task completed to make the next filter interesting
+morning_walk.markCompleted()
+
+# 4 — Filter: completed tasks only
+print_tasks(
+    scheduler.filter_tasks(status="completed"),
+    "FILTER — status='completed'",
+)
+
+# 5 — Filter: all tasks for Mochi
+print_tasks(
+    scheduler.filter_tasks(pet_name="Mochi"),
+    "FILTER — pet_name='Mochi'",
+)
+
+# 6 — Filter: Mochi's scheduled tasks only (both filters stacked)
+print_tasks(
+    scheduler.filter_tasks(status="scheduled", pet_name="Mochi"),
+    "FILTER — status='scheduled' + pet_name='Mochi'",
+)

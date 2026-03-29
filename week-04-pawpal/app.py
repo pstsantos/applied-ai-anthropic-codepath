@@ -1,6 +1,6 @@
 import warnings
 from datetime import datetime, time
-from pawpal_system import User, Household, Pet, Task, Notification
+from pawpal_system import User, Household, Pet, Task, Notification, Scheduler
 import streamlit as st
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
@@ -239,7 +239,8 @@ with st.expander("+ Add a task"):
             st.session_state.task_counter += 1
             st.rerun()
 
-sorted_tasks = sorted(st.session_state.tasks, key=lambda t: t.scheduledTime)
+scheduler    = Scheduler(household=household, tasks=st.session_state.tasks)
+sorted_tasks = scheduler.sort_by_time()
 
 if not sorted_tasks:
     st.info("No tasks yet — add one above.")

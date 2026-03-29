@@ -1,7 +1,7 @@
 import warnings
 from dataclasses import dataclass
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @dataclass
@@ -129,6 +129,7 @@ class Task:
     scheduledTime: datetime
     assignedTo: User
     status: str
+    recurrence: Optional[str] = None  # "daily", "weekly", or None
 
     def scheduleTask(self, scheduled_time: datetime, assigned_to: User) -> None:
         """Set the task's time and assignee, then mark it as 'scheduled'."""
@@ -242,4 +243,92 @@ class Scheduler:
             if start <= t <= end:
                 return True
         return False
+
+    def sort_by_time(self) -> List[Task]:
+        """Return tasks sorted chronologically by their scheduled time."""
+        return sorted(self.tasks, key=lambda task: task.scheduledTime)
+
+    def complete_and_recur(self, task: Task, new_task_id: str) -> Optional[Task]:
+        """Mark a task complete and, if it recurs, schedule the next occurrence.
+
+        Returns the new Task if one was created, or None if the task was one-off.
+        """
+        task.markCompleted()
+
+        if task.recurrence is None:
+            return None
+
+        if task.recurrence == "daily":
+            next_time = task.scheduledTime + timedelta(days=1)
+        elif task.recurrence == "weekly":
+            next_time = task.scheduledTime + timedelta(weeks=1)
+        else:
+            raise ValueError(f"Unknown recurrence value: '{task.recurrence}'. Use 'daily' or 'weekly'.")
+
+        next_task = Task(
+            taskId=new_task_id,
+            petId=task.petId,
+            taskType=task.taskType,
+            scheduledTime=next_time,
+            assignedTo=task.assignedTo,
+            status="scheduled",
+            recurrence=task.recurrence,
+        )
+        self.tasks.append(next_task)
+        return next_task
+
+    def detect_conflicts(self) -> List[str]:
+        """Check all scheduled tasks for time conflicts and return warning messages.
+
+        Two conflict types are detected:
+          - Same pet, same time: a pet physically can't do two things at once.
+          - Same assignee, same time: a person can't be in two places at once.
+
+        Returns a list of warning strings — empty list means no conflicts.
+        """
+        warnings = []
+        active = [t for t in self.tasks if t.status != "completed"]
+        pet_lookup = {p.petId: p.name for p in self.household.pets}
+
+        for i, a in enumerate(active):
+            for b in active[i + 1:]:
+                if a.scheduledTime != b.scheduledTime:
+                    continue
+
+                if a.petId == b.petId:
+                    pet_name = pet_lookup.get(a.petId, a.petId)
+                    warnings.append(
+                        f"Conflict: '{a.taskType}' and '{b.taskType}' "
+                        f"are both scheduled for {pet_name} at "
+                        f"{a.scheduledTime.strftime('%I:%M %p')}."
+                    )
+
+                if a.assignedTo.userId == b.assignedTo.userId:
+                    warnings.append(
+                        f"Conflict: {a.assignedTo.name} is assigned to both "
+                        f"'{a.taskType}' and '{b.taskType}' "
+                        f"at {a.scheduledTime.strftime('%I:%M %p')}."
+                    )
+
+        return warnings
+
+    def filter_tasks(
+        self,
+        status: Optional[str] = None,
+        pet_name: Optional[str] = None,
+    ) -> List[Task]:
+        """Return tasks filtered by completion status, pet name, or both.
+
+        Both filters are optional and stack — passing both returns tasks
+        that satisfy both conditions at once.
+        """
+        pet_ids = {
+            p.petId for p in self.household.pets
+            if pet_name is None or p.name.lower() == pet_name.lower()
+        }
+        return [
+            task for task in self.tasks
+            if (status is None or task.status == status)
+            and task.petId in pet_ids
+        ]
 
