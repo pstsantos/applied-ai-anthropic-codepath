@@ -34,9 +34,13 @@ Core actions :
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
- I had to make some iterations on how I wanted to handle Scheduling, initially I was conflicted over how it would be handled, I did not think it was reasonable for someone to assign household members a task in addition to their own task, or have multiple household members assign tasks to multiple household members, both of these solutions looked way too complex for a small project and also tedious, and even unconveninet, as a user to have so many responsibities. So I decided to instead come up with the ping operation - keeping users responsibilities loosely couples while allowing them to handle circumstances where they need to reschedule and request help from someone in the household. 
- User case 1 -
- User case 2 - 
+ I had to make some iterations on how I wanted to handle Scheduling, initially I was conflicted over how it would be handled, I did not think it was reasonable for someone to assign household members a task in addition to their own task, or have multiple household members assign tasks to other household members, both of these solutions looked way too complex for a small project and also tedious, and even inconveninet, for a user to have so many responsibities. So I decided to instead come up with the 'ping' operation - keeping users responsibilities loosely coupled while allowing them to handle circumstances where they need to reschedule and request help from someone in the household. 
+ 
+    User case 1 - Mary was supposed to walk her puppie, but she may need to pull extra hours at work, which means that she won't make it home on time to walk her puppy Lisa therefore she will ping her son Matt and her husband John and see who can walk their pet.
+
+    User case 2 - Matt has a midterm exam he needs to study for, he was supposed to walk his puppy Lisa, but since he is too busy he will ping his older sisters who are coming home soon and see if any of them can walk the puppy. 
+
+
 
     
 
