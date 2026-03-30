@@ -41,3 +41,6 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+### Smart reschedule
+* When a task is complete, user will have an opportunity to lof that task as recurring (daily and monthly)

@@ -88,8 +88,28 @@ vet_checkup = Task(
     status="scheduled",
 )
 
+# Conflict 1: same pet (Mochi), same time as morning_walk
+mochi_bath = Task(
+    taskId="t5",
+    petId=mochi.petId,
+    taskType="Bath Time",
+    scheduledTime=today.replace(hour=8, minute=0),  # same as morning_walk
+    assignedTo=owner,
+    status="scheduled",
+)
+
+# Conflict 2: different pet (Luna), same assignee (owner), same time as feeding
+luna_walk = Task(
+    taskId="t6",
+    petId=luna.petId,
+    taskType="Luna Walk",
+    scheduledTime=today.replace(hour=12, minute=0),  # same as feeding
+    assignedTo=owner,
+    status="scheduled",
+)
+
 # Intentionally out of order to prove sorting works
-all_tasks = [evening_walk, vet_checkup, morning_walk, feeding]
+all_tasks = [evening_walk, vet_checkup, morning_walk, feeding, mochi_bath, luna_walk]
 
 scheduler = Scheduler(household=household, tasks=all_tasks)
 
@@ -141,3 +161,15 @@ print_tasks(
     scheduler.filter_tasks(status="scheduled", pet_name="Mochi"),
     "FILTER — status='scheduled' + pet_name='Mochi'",
 )
+
+# 7 — Conflict detection
+print("=" * 50)
+print("  CONFLICT DETECTION — scheduler.detect_conflicts()")
+print("=" * 50)
+conflicts = scheduler.detect_conflicts()
+if conflicts:
+    for warning in conflicts:
+        print(f"  ⚠️  {warning}")
+else:
+    print("  No conflicts found.")
+print("=" * 50)
