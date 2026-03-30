@@ -39,10 +39,7 @@ Core actions :
     User case 1 - Mary was supposed to walk her puppie, but she may need to pull extra hours at work, which means that she won't make it home on time to walk her puppy Lisa therefore she will ping her son Matt and her husband John and see who can walk their pet.
 
     User case 2 - Matt has a midterm exam he needs to study for, he was supposed to walk his puppy Lisa, but since he is too busy he will ping his older sisters who are coming home soon and see if any of them can walk the puppy. 
-
-
-
-    
+ 
 
 ---
 
@@ -57,6 +54,8 @@ Core actions :
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+The detecting conflits is not as optimal, Iknew there was something that could be improved and after discussing it with Claude I reached the condlusion, that for an app like this maybe for readability, optimizating may not a good call just yet.
 
 ---
 
