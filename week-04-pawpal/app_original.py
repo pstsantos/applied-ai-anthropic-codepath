@@ -140,7 +140,7 @@ with st.sidebar:
         if add_pet_btn and s_pet_name:
             pid = f"p{len(household.pets) + 1}"
             has_incomplete_vet = (s_vet_name and not s_vet_phone) or (s_vet_phone and not s_vet_name)
-
+            
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
                 new_pet = Pet(
@@ -220,8 +220,6 @@ with st.expander("+ Add a task"):
             with col2:
                 task_time   = st.time_input("Scheduled time", value=time(8, 0))
                 assigned_to = st.selectbox("Assign to", list(member_options.keys()))
-            with col3:
-                task_recurrence = st.selectbox("Recurrence", ["None", "daily", "weekly"])
 
             add_task = st.form_submit_button("Add Task", use_container_width=True)
 
@@ -236,83 +234,27 @@ with st.expander("+ Add a task"):
                 scheduledTime=dt,
                 assignedTo=member_options[assigned_to],
                 status="scheduled",
-                recurrence=None if task_recurrence == "None" else task_recurrence,
             )
             st.session_state.tasks.append(new_task)
             st.session_state.task_counter += 1
             st.rerun()
 
-scheduler = Scheduler(household=household, tasks=st.session_state.tasks)
+scheduler    = Scheduler(household=household, tasks=st.session_state.tasks)
+sorted_tasks = scheduler.sort_by_time()
 
-# ── Conflict detection ─────────────────────────────────────────────────────────
-conflicts = scheduler.detect_conflicts()
-if conflicts:
-    with st.warning("⚠️ Scheduling conflicts detected"):
-        for c in conflicts:
-            st.write(f"• {c}")
-
-# ── Sort & Filter controls ─────────────────────────────────────────────────────
-col_sort, col_filter, col_filter_val = st.columns(3)
-
-with col_sort:
-    sort_option = st.selectbox(
-        "Sort by",
-        ["Time (earliest first)", "Time (latest first)", "Assignee", "Pet"],
-        key="sort_select",
-    )
-
-with col_filter:
-    filter_option = st.selectbox(
-        "Filter by",
-        ["All", "Scheduled", "Completed", "By Pet", "By Member"],
-        key="filter_select",
-    )
-
-# Secondary filter value (pet or member name)
-filter_value = None
-with col_filter_val:
-    if filter_option == "By Pet" and household.pets:
-        filter_value = st.selectbox("Select pet", [p.name for p in household.pets], key="filter_pet")
-    elif filter_option == "By Member":
-        filter_value = st.selectbox("Select member", [m.name for m in household.members], key="filter_member")
-
-# ── Apply sorting ──────────────────────────────────────────────────────────────
-if sort_option == "Time (earliest first)":
-    display_tasks = scheduler.sort_by_time()
-elif sort_option == "Time (latest first)":
-    display_tasks = list(reversed(scheduler.sort_by_time()))
-elif sort_option == "Assignee":
-    display_tasks = sorted(scheduler.tasks, key=lambda t: t.assignedTo.name)
-elif sort_option == "Pet":
-    display_tasks = sorted(scheduler.tasks, key=lambda t: pet_lookup.get(t.petId, ""))
+if not sorted_tasks:
+    st.info("No tasks yet — add one above.")
 else:
-    display_tasks = scheduler.sort_by_time()
-
-# ── Apply filtering ────────────────────────────────────────────────────────────
-if filter_option == "Scheduled":
-    display_tasks = [t for t in display_tasks if t.status == "scheduled"]
-elif filter_option == "Completed":
-    display_tasks = [t for t in display_tasks if t.status == "completed"]
-elif filter_option == "By Pet" and filter_value:
-    pet_id = next((p.petId for p in household.pets if p.name == filter_value), None)
-    display_tasks = [t for t in display_tasks if t.petId == pet_id]
-elif filter_option == "By Member" and filter_value:
-    display_tasks = [t for t in display_tasks if t.assignedTo.name == filter_value]
-
-# ── Task table ─────────────────────────────────────────────────────────────────
-if not display_tasks:
-    st.info("No tasks match — add one above or change your filter.")
-else:
-    col_w = [0.7, 0.7, 0.5, 0.7, 0.5, 0.7, 0.5, 0.5, 0.5]
+    col_w = [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
 
     # Header row
     header_cols = st.columns(col_w)
-    for col, label in zip(header_cols, ["Time", "Task", "Recur", "Pet", "Assigned to", "Status", "✅", "📣", "🗑️"]):
+    for col, label in zip(header_cols, ["Time", "Task", "Pet", "Assigned to", "Status", "✅", "📣", "🗑️"]):
         col.markdown(f"**{label}**")
     st.divider()
 
     # Data rows
-    for task in display_tasks:
+    for task in sorted_tasks:
         pet_name      = pet_lookup.get(task.petId, "?")
         other_members = [m for m in household.members if m.userId != task.assignedTo.userId]
         task_notif    = next(
@@ -323,39 +265,32 @@ else:
 
         cols[0].write(task.scheduledTime.strftime("%I:%M %p"))
         cols[1].write(task.taskType)
-        cols[2].write(task.recurrence or "—")
-        cols[3].write(pet_name)
-        cols[4].write(task.assignedTo.name)
+        cols[2].write(pet_name)
+        cols[3].write(task.assignedTo.name)
 
         if task.status == "completed":
-            cols[5].success("Done ✅")
+            cols[4].success("Done ✅")
         elif task_notif:
             if task_notif.status == "sent":
-                cols[5].info("⏳ Pending")
+                cols[4].info("⏳ Pending")
             elif task_notif.status == "accepted":
-                cols[5].success("✅ Accepted")
+                cols[4].success("✅ Accepted")
             elif task_notif.status == "declined":
-                cols[5].error("❌ Declined")
+                cols[4].error("❌ Declined")
         else:
-            cols[5].warning("Scheduled")
+            cols[4].warning("Scheduled")
 
         if task.status != "completed":
-            if cols[6].button("✅", key=f"complete_{task.taskId}", help="Mark complete"):
-                # Use complete_and_recur to handle recurrence automatically
-                if task.recurrence:
-                    new_id = f"t{st.session_state.task_counter}"
-                    scheduler.complete_and_recur(task, new_id)
-                    st.session_state.task_counter += 1
-                else:
-                    task.markCompleted()
+            if cols[5].button("✅", key=f"complete_{task.taskId}", help="Mark complete"):
+                task.markCompleted()
                 st.rerun()
 
         if other_members and task.status != "completed" and not task_notif:
-            if cols[7].button("📣", key=f"ping_{task.taskId}", help="Ping member"):
+            if cols[6].button("📣", key=f"ping_{task.taskId}", help="Ping member"):
                 st.session_state.pinging_task_id = task.taskId
                 st.rerun()
 
-        if cols[8].button("🗑️", key=f"delete_{task.taskId}", help="Remove task"):
+        if cols[7].button("🗑️", key=f"delete_{task.taskId}", help="Remove task"):
             st.session_state.tasks = [
                 t for t in st.session_state.tasks if t.taskId != task.taskId
             ]
