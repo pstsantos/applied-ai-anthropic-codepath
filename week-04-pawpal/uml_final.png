@@ -1,0 +1,85 @@
+classDiagram
+    class User {
+        -userId: string
+        -name: string
+        -email: string
+        -phone: string
+        -availability: dict
+        +addUser() dict
+        +updateAvailability(dict) void
+        +getAvailability() dict
+    }
+
+    class Household {
+        -householdId: string
+        -name: string
+        -members: List~User~
+        -pets: List~Pet~
+        +createHousehold() dict
+        +addMember(user: User) void
+        +removeMember(user_id: str) void
+        +addPet(pet: Pet) void
+    }
+
+    class Pet {
+        -petId: string
+        -name: string
+        -age: int
+        -breed: string
+        -householdId: string
+        -vetName: Optional~str~
+        -vetPhone: Optional~str~
+        +addPet(household: Household) void
+        +removePet(household: Household) void
+        +updatePetInfo(**kwargs) void
+    }
+
+    class Task {
+        -taskId: string
+        -petId: string
+        -taskType: string
+        -scheduledTime: datetime
+        -assignedTo: User
+        -status: string
+        -recurrence: Optional~str~
+        +scheduleTask(time, user) void
+        +getTaskStatus() string
+        +markCompleted() void
+        +reassignTask(user: User) void
+    }
+
+    class Notification {
+        -pingId: string
+        -taskId: string
+        -fromUser: User
+        -toUser: User
+        -message: string
+        -status: string
+        -createdAt: datetime
+        -respondedAt: Optional~datetime~
+        +sendPing() void
+        +acceptPing() void
+        +declinePing() void
+    }
+
+    class Scheduler {
+        -household: Household
+        -tasks: List~Task~
+        +getAvailableUsers(time: datetime) List~User~
+        +isTimeInSlots(time: datetime, slots) bool
+        +sort_by_time() List~Task~
+        +complete_and_recur(task, new_id) Optional~Task~
+        +detect_conflicts() List~str~
+        +filter_tasks(status, pet_name) List~Task~
+    }
+
+    Household "1" -- "*" User : contains
+    Household "1" -- "*" Pet : owns
+    Pet "1" -- "*" Task : has
+    Task "1" -- "1" User : assignedTo
+    Task "1" -- "*" Notification : triggers
+    Notification "1" -- "1" User : fromUser
+    Notification "1" -- "1" User : toUser
+    Scheduler "1" -- "1" Household : manages
+    Scheduler "1" -- "*" Task : schedules
+    Task "0..1" -- "0..1" Task : recurring relationship

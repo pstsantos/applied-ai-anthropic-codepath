@@ -1,46 +1,74 @@
-# PawPal+ (Module 2 Project)
+# PawPal+ — Collaborative Pet Task Management System
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+**PawPal+** is a real-time multi-household pet care task management platform built with Streamlit and a custom scheduling engine. It helps families, roommates, and pet-sitting services coordinate pet care, prevent scheduling conflicts, and delegate tasks intelligently.
 
-## Scenario
+## The Problem
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+Coordinating pet care across multiple people is chaotic:
+- **Scheduling conflicts** — Two people assigned to walk the same dog at the same time
+- **Manual rescheduling** — Recurring tasks like daily walks require tedious re-entry
+- **Communication gaps** — No easy way to ask for help when plans change
+- **Lost accountability** — No record of who completed what task
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
+## The Solution
 
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
+PawPal+ solves each problem with intelligent scheduling, conflict detection, and collaborative task delegation.
 
-## What you will build
+## Core Features
 
-Your final app should:
+### 🔀 Intelligent Conflict Detection
+- Real-time validation prevents scheduling conflicts instantly
+- Detects **same-pet conflicts** (a pet can't do two tasks at once)
+- Detects **same-assignee conflicts** (a person can't be in two places at once)
 
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+### 🔄 Recurring Task Automation
+- Tasks recur automatically on daily or weekly schedules
+- New task instances inherit pet, type, assignee, and recurrence pattern
+- Handles edge cases: leap years, month boundaries
 
-## Getting started
+### 🎯 Smart Task Sorting & Filtering
+- Sort by: **time**, **assignee name**, **pet name**
+- Filter by: **status** (scheduled/completed), **pet**, **household member**
+- Scales efficiently to 100+ tasks
+
+### 📣 Collaborative Task Delegation (Ping System)
+- Users can ping household members to request help with a task
+- Recipients can **accept** or **decline**
+- Tasks automatically reassign to accepter upon confirmation
+- State machine prevents invalid transitions
+
+### 👥 Multi-User Household Management
+- Unlimited household members with distinct availability schedules
+- Members can have different availability windows (e.g., "9am-5pm weekdays")
+- Task assignments respect user availability constraints
+
+### 🐾 Pet Profile Management
+- Store comprehensive pet info: breed, age, veterinarian, vet phone
+- Add/remove pets dynamically as household needs change
+- Support for multiple pets per household
+
+### ✅ Task Completion & History
+- Mark tasks complete with single click
+- Automatic recurrence trigger for recurring tasks
+- Completion timestamps for user accountability
+
+## Demo
+
+![PawPal+ Dashboard](screenshot.png)
+
+*PawPal+ dashboard showing task management interface with conflict detection and multi-user household support.*
+
+
+
+## Getting Started
 
 ### Setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-### Suggested workflow
-
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
 
 ### Running the App
 
@@ -48,88 +76,82 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app will open at `http://localhost:8501`.
+Opens at `http://localhost:8501`
 
-### Testing PawPal+
-
-Run the comprehensive test suite:
+### Running Tests
 
 ```bash
 PYTHONPATH=. python -m pytest tests/test_pawpal.py -v
 ```
 
-### Smart Rescheduling
+## Test Coverage: 69 Tests, 100% Pass Rate
 
-When a task is marked complete, the system automatically:
-- Logs the completion in the task history
-- Prompts the user to set recurrence (daily or weekly)
-- If recurrence is enabled, creates the next task instance
-- Validates the new task for conflicts with other scheduled tasks
-- Maintains all properties (pet, assignee, task type) across recurrences
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| **Conflict Detection** | 16 | Same-pet, same-assignee, edge cases |
+| **Recurring Tasks** | 15 | Daily/weekly patterns, property inheritance |
+| **Filtering & Queries** | 13 | Status, pet, member filters |
+| **Notification Workflow** | 12 | State machine, double-acceptance prevention |
+| **Task Sorting** | 9 | Chronological ordering, immutability |
+| **Integration** | 5 | Complex scenarios with 10+ recurring tasks |
+| **TOTAL** | **69** | **100% pass rate** |
 
-This prevents manual re-entry of repetitive tasks while ensuring no scheduling conflicts occur.
+## Confidence Level: 4/5
 
-**Test Coverage (69 tests across 5 core behaviors):**
+**What's Solid ✅**
+- 69 comprehensive tests (100% pass rate)
+- Core scheduling logic fully validated
+- Robust edge case handling (leap years, midnight boundaries, microsecond precision)
+- Clean separation of business logic from UI
+- State machine for notifications is production-ready
 
-1. **Conflict Detection (16 tests)** — Validates that the system prevents double-booking
-   - Same pet at same time
-   - Same assignee at same time
-   - Edge cases: completed tasks, midnight boundaries, microsecond precision
-   - Scales to 100+ tasks correctly
-
-2. **Recurring Task Execution (15 tests)** — Ensures tasks recur properly
-   - Daily and weekly recurrence patterns
-   - New tasks inherit pet, type, assignee, and recurrence
-   - Edge cases: leap years, month boundaries, invalid recurrence types
-   - Tasks marked as completed before recurrence
-
-3. **Task Filtering & Queries (13 tests)** — Tests filtering by status and pet
-   - Filter by status (scheduled, completed, or both)
-   - Filter by pet name (case-insensitive)
-   - Edge cases: empty lists, non-existent pets, large task sets (100+ tasks)
-
-4. **Notification Workflow (12 tests)** — Validates the ping state machine
-   - State transitions: pending → sent → accepted/declined
-   - Timestamps set on response
-   - Edge cases: empty messages allowed, double-acceptance prevention
-
-5. **Task Sorting (9 tests)** — Confirms correct chronological ordering
-   - Single and multiple tasks
-   - Already-sorted vs unsorted task lists
-   - Immutability of original list after sorting
-   - Edge cases: same-time tasks, microsecond differences, midnight boundaries
-
-6. **Integration Scenarios (5 tests)** — Cross-behavior validation
-   - Recurring tasks detected for conflicts
-   - Filter → Sort workflow maintains order
-   - Ping acceptance with task state
-   - Large complex scenarios with 10+ recurring tasks
-
-    All tests pass with 100% success rate.
-
-### Confidence Level
-
-**4/5** — System's reliability based on test results
-
-**Why 4/5:**
-
-✅ **Strengths (What's solid):**
-- 69 comprehensive tests with 100% pass rate
-- Core scheduling logic fully validated (conflict detection, recurring tasks, filtering, sorting)
-- Edge cases covered (leap years, midnight boundaries, microsecond precision, 100+ task scale)
-- State machine for notifications is robust
-- Business logic is well-isolated from UI
-
-⚠️ **What's Incomplete (Why not 5/5):**
-- No persistence layer — tasks lost on page refresh (in-memory only)
-- Streamlit UI not fully stress-tested (works for ~100 tasks, untested at 1000+)
+**What's Incomplete ⚠️**
+- No persistence layer (in-memory only; tasks lost on refresh)
+- Streamlit UI untested at scale (works for ~100 tasks, unclear at 1000+)
+- All queries O(n) scans (acceptable for current scale)
 - No production logging/monitoring
-- Performance optimizations not implemented (all queries are O(n) scans)
-- Error handling could be more graceful
 
 **To Reach 5/5:**
-1. Add database persistence (PostgreSQL, SQLite, or Firebase)
-2. Implement caching for availability parsing
-3. Add indexed queries for pet-based lookups
+1. Add database persistence (SQLite, PostgreSQL, or Firebase)
+2. Implement indexed queries for pet-based lookups
+3. Add caching for availability parsing
 4. Deploy with monitoring and error tracking
-5. Load testing with 10k+ tasks 
+5. Load testing with 10k+ tasks
+
+## Technical Architecture
+
+**Backend:** Pure Python dataclass-based system
+- `User` — Household members with availability schedules
+- `Household` — Container for users and pets
+- `Pet` — Pet profiles with vet information
+- `Task` — Pet care tasks with recurrence and assignments
+- `Notification` — Ping system for task delegation
+- `Scheduler` — Conflict detection, sorting, filtering, availability matching
+
+**Frontend:** Streamlit with custom CSS design system
+- DM Sans typography
+- Warm color palette (#F0997B coral, #FFFAF7 cream, #FBF0EA sage)
+- Responsive layout with right-aligned sidebar
+- Real-time task status updates
+
+**State Management:** Streamlit session state with immutable patterns
+
+## Project Structure
+
+```
+week-04-pawpal/
+├── app.py                    # Streamlit UI with custom CSS design
+├── pawpal_system.py          # Core scheduling engine + data models
+├── tests/
+│   └── test_pawpal.py        # 69 comprehensive pytest tests
+├── README.md
+├── reflection.md             # Design decisions & lessons learned
+├── uml_final.png             # Updated UML class diagram
+└── requirements.txt
+```
+
+## Built For
+
+- 👨‍👩‍👧‍👦 Families managing shared pet care responsibilities
+- 🏢 Pet-sitting and dog-walking services coordinating staff
+- 🐾 Anyone with multiple people and multiple pets who needs scheduling help 

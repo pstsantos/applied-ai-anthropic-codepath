@@ -717,26 +717,32 @@ else:
                 options = ["Scheduled", "Completed", "Missed"]
                 if other_members:
                     options.append("Ping 📣")
-                new_status = st.selectbox(
+
+                def _on_status(tid=task.taskId, tobj=task, sched=scheduler):
+                    """Callback fires BEFORE widget re-renders, so key reset is safe."""
+                    key = f"status_{tid}"
+                    action = st.session_state[key]
+                    if action == "Completed":
+                        if tobj.recurrence:
+                            new_id = f"t{st.session_state.task_counter}"
+                            sched.complete_and_recur(tobj, new_id)
+                            st.session_state.task_counter += 1
+                        else:
+                            tobj.markCompleted()
+                    elif action == "Missed":
+                        tobj.status = "missed"
+                    elif action == "Ping 📣":
+                        st.session_state.pinging_task_id = tid
+                    # Reset so the selectbox shows "Scheduled" on next render
+                    st.session_state[key] = "Scheduled"
+
+                st.selectbox(
                     "Status",
                     options,
                     key=f"status_{task.taskId}",
+                    on_change=_on_status,
                     label_visibility="collapsed",
                 )
-                if new_status == "Completed":
-                    if task.recurrence:
-                        new_id = f"t{st.session_state.task_counter}"
-                        scheduler.complete_and_recur(task, new_id)
-                        st.session_state.task_counter += 1
-                    else:
-                        task.markCompleted()
-                    st.rerun()
-                elif new_status == "Missed":
-                    task.status = "missed"
-                    st.rerun()
-                elif new_status == "Ping 📣":
-                    st.session_state.pinging_task_id = task.taskId
-                    st.rerun()
 
         with c_del:
             if st.button("✕", key=f"del_{i}", help="Delete task"):
