@@ -16,6 +16,7 @@ Weekly hands-on exercises from the **Applied AI** course, a collaboration betwee
 | 03 | [ByteBites](./week-03-bytebites) | OOP design, UML diagrams, Python classes, AI collaboration |
 | 04 | [PawPal](./week-04-pawpal) | Streamlit applications, AI integration, project development |
 | 05 | [Mood Machine](./week-05-mood-machine) | Text classification, rule-based vs ML models, bias & fairness, model cards |
+| 06 | [Music Recommender](./week-06-music-recommender) | Recommendation systems, simulation, music data |
 
 *Updated weekly throughout the course.*
 
