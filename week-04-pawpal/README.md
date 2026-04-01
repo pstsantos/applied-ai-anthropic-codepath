@@ -58,8 +58,6 @@ PawPal+ solves each problem with intelligent scheduling, conflict detection, and
 
 *PawPal+ dashboard showing task management interface with conflict detection and multi-user household support.*
 
-
-
 ## Getting Started
 
 ### Setup
