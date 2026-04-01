@@ -9,6 +9,7 @@ This class starts with very simple logic:
   - Convert that score into a mood label
 """
 
+import string
 from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
@@ -40,50 +41,121 @@ class MoodAnalyzer:
         """
         Convert raw text into a list of tokens the model can work with.
 
-        TODO: Improve this method.
-
-        Right now, it does the minimum:
-          - Strips leading and trailing whitespace
-          - Converts everything to lowercase
-          - Splits on spaces
-
-        Ideas to improve:
-          - Remove punctuation
-          - Handle simple emojis separately (":)", ":-(", "🥲", "😂")
-          - Normalize repeated characters ("soooo" -> "soo")
+        Improvements implemented:
+          - Removes punctuation
+          - Maps emojis to sentiment words
+          - Strips leading/trailing whitespace
+          - Converts to lowercase
         """
-        cleaned = text.strip().lower()
+        # Map common emojis to sentiment words before processing
+        emoji_map = {
+            "😂": "amazing",
+            "🥲": "sad",
+            ":)": "happy",
+            ":(": "sad",
+            ":-)": "happy",
+            ":-(": "sad",
+            "💀": "sad",
+            "🔥": "awesome",
+            "✨": "awesome",
+        }
+        
+        cleaned = text.strip()
+        # Replace emojis with words
+        for emoji, word in emoji_map.items():
+            cleaned = cleaned.replace(emoji, " " + word + " ")
+        
+        # Remove punctuation
+        cleaned = cleaned.translate(str.maketrans('', '', string.punctuation))
+        cleaned = cleaned.lower()
+        
         tokens = cleaned.split()
-
         return tokens
 
     # ---------------------------------------------------------------------
     # Scoring logic
     # ---------------------------------------------------------------------
 
+    def _detect_sarcasm(self, text: str) -> bool:
+        """Check if the text contains common sarcasm patterns."""
+        lowered = text.lower()
+
+        # Known sarcastic phrases
+        sarcastic_phrases = [
+            "oh great",
+            "yeah right",
+            "sure thing",
+            "thanks for nothing",
+            "how wonderful",
+            "oh wonderful",
+            "just wonderful",
+            "oh fantastic",
+            "just fantastic",
+            "oh perfect",
+            "just perfect",
+            "what a surprise",
+            "totally love",
+            "absolutely love",
+            "so fun",
+        ]
+
+        for phrase in sarcastic_phrases:
+            if phrase in lowered:
+                return True
+
+        # Sarcasm markers: positive word near a clearly negative context
+        sarcasm_markers = ["yeah", "sure", "totally", "absolutely", "obviously"]
+        tokens = lowered.split()
+        for marker in sarcasm_markers:
+            if marker in tokens:
+                # Check if a negative topic follows nearby
+                marker_index = tokens.index(marker)
+                nearby_words = tokens[marker_index:marker_index + 4]
+                negative_topics = {"traffic", "monday", "mondays", "homework",
+                                   "chores", "waiting", "meetings", "bills"}
+                if any(w in negative_topics for w in nearby_words):
+                    return True
+
+        return False
+
     def score_text(self, text: str) -> int:
         """
         Compute a numeric "mood score" for the given text.
 
-        Positive words increase the score.
-        Negative words decrease the score.
-
-        TODO: You must choose AT LEAST ONE modeling improvement to implement.
-        For example:
-          - Handle simple negation such as "not happy" or "not bad"
-          - Count how many times each word appears instead of just presence
-          - Give some words higher weights than others (for example "hate" < "annoyed")
-          - Treat emojis or slang (":)", "lol", "💀") as strong signals
+        Improvements:
+          - Counts word frequency (not just presence)
+          - Handles negation ("not happy" -> negative)
+          - Detects common sarcasm patterns and flips the score
         """
-        # TODO: Implement this method.
-        #   1. Call self.preprocess(text) to get tokens.
-        #   2. Loop over the tokens.
-        #   3. Increase the score for positive words, decrease for negative words.
-        #   4. Return the total score.
-        #
-        # Hint: if you implement negation, you may want to look at pairs of tokens,
-        # like ("not", "happy") or ("never", "fun").
-        pass
+        tokens = self.preprocess(text)
+        score = 0
+        negation_words = {"not", "never", "no", "neither", "nor"}
+        
+        for i, token in enumerate(tokens):
+            # Check if the word before this one is a negation word
+            has_word_before = i > 0
+            is_negated = has_word_before and tokens[i - 1] in negation_words
+
+            is_positive = token in self.positive_words
+            is_negative = token in self.negative_words
+
+            if is_positive:
+                if is_negated:
+                    score -= 1  # "not happy" counts as negative
+                else:
+                    score += 1  # "happy" counts as positive
+
+            elif is_negative:
+                if is_negated:
+                    score += 1  # "not sad" counts as positive
+                else:
+                    score -= 1  # "sad" counts as negative
+
+        # If sarcasm detected, flip the score
+        if self._detect_sarcasm(text) and score != 0:
+            score = -score
+
+        return score
 
     # ---------------------------------------------------------------------
     # Label prediction
@@ -93,24 +165,29 @@ class MoodAnalyzer:
         """
         Turn the numeric score for a piece of text into a mood label.
 
-        The default mapping is:
+        Mapping:
           - score > 0  -> "positive"
           - score < 0  -> "negative"
-          - score == 0 -> "neutral"
-
-        TODO: You can adjust this mapping if it makes sense for your model.
-        For example:
-          - Use different thresholds (for example score >= 2 to be "positive")
-          - Add a "mixed" label for scores close to zero
-        Just remember that whatever labels you return should match the labels
-        you use in TRUE_LABELS in dataset.py if you care about accuracy.
+          - score == 0 and equal positive/negative counts -> "mixed"
+          - score == 0 and no balance                     -> "neutral"
         """
-        # TODO: Implement this method.
-        #   1. Call self.score_text(text) to get the numeric score.
-        #   2. Return "positive" if the score is above 0.
-        #   3. Return "negative" if the score is below 0.
-        #   4. Return "neutral" otherwise.
-        pass
+        score = self.score_text(text)
+
+        if score > 0:
+            return "positive"
+        elif score < 0:
+            return "negative"
+        else:
+            # Score is 0 — figure out if it's mixed or neutral
+            tokens = self.preprocess(text)
+            positive_count = sum(1 for t in tokens if t in self.positive_words)
+            negative_count = sum(1 for t in tokens if t in self.negative_words)
+
+            both_sides_present = positive_count > 0 and negative_count > 0
+            if both_sides_present and positive_count == negative_count:
+                return "mixed"
+            else:
+                return "neutral"
 
     # ---------------------------------------------------------------------
     # Explanations (optional but recommended)
