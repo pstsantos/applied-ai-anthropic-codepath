@@ -17,6 +17,7 @@ Weekly hands-on exercises from the **Applied AI** course, a collaboration betwee
 | 04 | [PawPal](./week-04-pawpal) | Streamlit applications, AI integration, project development |
 | 05 | [Mood Machine](./week-05-mood-machine) | Text classification, rule-based vs ML models, bias & fairness, model cards |
 | 06 | [Music Recommender](./week-06-music-recommender) | Recommendation systems, simulation, music data |
+| 07 | [DocuBot](./week-07-docubot) | Documentation assistant, RAG, LLM integration, evaluation |
 
 *Updated weekly throughout the course.*
 

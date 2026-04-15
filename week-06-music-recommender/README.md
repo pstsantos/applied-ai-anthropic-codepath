@@ -17,17 +17,32 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+Each **Song** in the catalog carries ten attributes: a unique id, title, and artist name, plus seven musical features — genre, mood, energy level (0–1), tempo in BPM, valence (how positive the song feels, 0–1), danceability (0–1), and acousticness (0–1).
 
-Some prompts to answer:
+A **UserProfile** stores what the listener cares about: their favourite genre, favourite mood, a target energy level, and whether they lean toward acoustic music.
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+### Scoring Rule — rating one song at a time
 
-You can include a simple diagram or bullet list if helpful.
+When the recommender looks at a single song, it computes a weighted score across three priority tiers:
+
+| Priority | Features | Why it matters |
+|---|---|---|
+| P1 (highest weight) | Genre match, Mood match | These are the strongest signals of taste — a mismatch here usually means the song is simply wrong for the user |
+| P2 (medium weight) | Energy distance, Valence | These capture the emotional texture — how intense and how positive the song feels relative to what the user wants |
+| P3 (lower weight) | Danceability, Tempo BPM | These fine-tune the result once the bigger factors are already satisfied |
+
+Genre and mood are binary matches (match = 1, no match = 0). Energy and valence are continuous, so the score uses the distance between the song's value and the user's target — the closer, the higher the contribution.
+
+### Ranking Rule — choosing what to surface
+
+Once every song has a score, the system applies four steps to decide the final list:
+
+1. **Top-K selection** — keep only the highest-scoring songs (default K = 5)
+2. **Diversity** — avoid returning songs that are too similar to each other (e.g. five lofi tracks by the same artist)
+3. **Tie-breaking** — when two songs have equal scores, prefer higher valence as a tiebreaker
+4. **Filters** — songs the user has already heard can be excluded before ranking begins
+
+The final output is an ordered list of songs, each paired with its score and a plain-language explanation of why it was recommended.
 
 ---
 
