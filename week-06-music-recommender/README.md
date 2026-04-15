@@ -19,30 +19,48 @@ Replace this paragraph with your own summary of what your version does.
 
 Each **Song** in the catalog carries ten attributes: a unique id, title, and artist name, plus seven musical features — genre, mood, energy level (0–1), tempo in BPM, valence (how positive the song feels, 0–1), danceability (0–1), and acousticness (0–1).
 
-A **UserProfile** stores what the listener cares about: their favourite genre, favourite mood, a target energy level, and whether they lean toward acoustic music.
+A **UserProfile** stores what the listener cares about: their favourite genres, favourite moods, target energy level, target valence, target danceability, target tempo, and whether they lean toward acoustic music.
 
-### Scoring Rule — rating one song at a time
+### Algorithm Recipe
+
+#### Scoring Rule — rating one song at a time
 
 When the recommender looks at a single song, it computes a weighted score across three priority tiers:
 
-| Priority | Features | Why it matters |
-|---|---|---|
-| P1 (highest weight) | Genre match, Mood match | These are the strongest signals of taste — a mismatch here usually means the song is simply wrong for the user |
-| P2 (medium weight) | Energy distance, Valence | These capture the emotional texture — how intense and how positive the song feels relative to what the user wants |
-| P3 (lower weight) | Danceability, Tempo BPM | These fine-tune the result once the bigger factors are already satisfied |
+| Priority | Feature | Weight | How it's calculated |
+|---|---|---|---|
+| P1 | Mood match | 0.17 | Binary — 1 if song mood is in user's mood list, else 0 |
+| P1 | Genre match | 0.13 | Binary — 1 if song genre is in user's genre list, else 0 |
+| P2 | Energy distance | 0.175 | `1 - abs(song.energy - target_energy)` |
+| P2 | Valence distance | 0.175 | `1 - abs(song.valence - target_valence)` |
+| P3 | Danceability distance | 0.15 | `1 - abs(song.danceability - target_danceability)` |
+| P3 | Tempo distance | 0.15 | Tempo normalised to 0–1 before subtracting |
+| Penalty | Acoustic penalty | up to −0.10 | `acousticness × 0.10` subtracted when user dislikes acoustic |
 
-Genre and mood are binary matches (match = 1, no match = 0). Energy and valence are continuous, so the score uses the distance between the song's value and the user's target — the closer, the higher the contribution.
+**P1 total: 30% · P2 total: 35% · P3 total: 30%**
 
-### Ranking Rule — choosing what to surface
+Key design decisions:
+- **Mood is weighted above genre** — mood crosses genre lines more naturally. A user who wants something "nostalgic" can find that in rock, pop, or jazz.
+- **P2 carries the most weight** — energy and valence are the core of discovery. A song from an unexpected genre can surface if it *feels* right.
+- **No hard genre filter** — songs outside the user's stated genres are not excluded, only nudged down. This preserves the exploration aspect of music discovery.
+
+#### Ranking Rule — choosing what to surface
 
 Once every song has a score, the system applies four steps to decide the final list:
 
 1. **Top-K selection** — keep only the highest-scoring songs (default K = 5)
-2. **Diversity** — avoid returning songs that are too similar to each other (e.g. five lofi tracks by the same artist)
+2. **Diversity** — cap the number of songs per artist to avoid the list being dominated by one act
 3. **Tie-breaking** — when two songs have equal scores, prefer higher valence as a tiebreaker
 4. **Filters** — songs the user has already heard can be excluded before ranking begins
 
 The final output is an ordered list of songs, each paired with its score and a plain-language explanation of why it was recommended.
+
+### Expected Biases
+
+- **Mood over genre** — because mood is weighted higher than genre, the system may surface songs from genres the user didn't list if the emotional tone is close. This is intentional for discovery but could feel surprising.
+- **Energy and valence centrality** — P2 has the highest total weight, so songs that match the user's energy and emotional target will rank highly even when genre and mood miss. This may over-reward "feeling right" at the expense of stylistic fit.
+- **Catalog skew** — the 20-song catalog is not evenly distributed across genres and moods. Genres with more representation (e.g. pop, rock) will appear in results more often simply because there are more candidates to score well.
+- **Acoustic users are underserved** — the acoustic penalty only applies when `likes_acoustic = False`. There is no equivalent boost for users who actively prefer acoustic music, which creates an asymmetry.
 
 ---
 
