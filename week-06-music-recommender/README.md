@@ -64,6 +64,45 @@ The final output is an ordered list of songs, each paired with its score and a p
 
 ---
 
+## Sample Output
+
+Running `python -m src.main` with the default taste profile (`genre: [pop, indie pop]`, `mood: [happy, nostalgic]`, `target_energy: 0.80`) produces:
+
+```
+==================================================
+  Top 5 Recommendations for You
+==================================================
+
+#1  Sunrise City — Neon Echo
+    Genre: pop  |  Mood: happy
+    Score: 0.92
+    Why:   mood match — happy (+0.17) · genre match — pop (+0.13) · energy fit (+0.17) · valence fit (+0.17) · danceability fit (+0.15) · tempo fit (+0.15) · acoustic penalty (-0.02)
+
+#2  Rooftop Lights — Indigo Parade
+    Genre: indie pop  |  Mood: happy
+    Score: 0.89
+    Why:   mood match — happy (+0.17) · genre match — indie pop (+0.13) · energy fit (+0.15) · valence fit (+0.17) · danceability fit (+0.15) · tempo fit (+0.15) · acoustic penalty (-0.03)
+
+#3  Shape of You — Ed Sheeran
+    Genre: pop  |  Mood: happy
+    Score: 0.88
+    Why:   mood match — happy (+0.17) · genre match — pop (+0.13) · energy fit (+0.15) · valence fit (+0.16) · danceability fit (+0.15) · tempo fit (+0.15) · acoustic penalty (-0.03)
+
+#4  Blinding Lights — The Weeknd
+    Genre: pop  |  Mood: nostalgic
+    Score: 0.73
+    Why:   mood match — nostalgic (+0.17) · genre match — pop (+0.13) · energy fit (+0.16) · valence fit (+0.12) · danceability fit (+0.11) · tempo fit (+0.10)
+
+#5  Gym Hero — Max Pulse
+    Genre: pop  |  Mood: intense
+    Score: 0.71
+    Why:   genre match — pop (+0.13) · energy fit (+0.15) · valence fit (+0.14) · danceability fit (+0.15) · tempo fit (+0.14)
+
+==================================================
+```
+
+---
+
 ## Getting Started
 
 ### Setup
