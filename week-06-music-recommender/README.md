@@ -2,16 +2,11 @@
 
 ## Project Summary
 
-In this project you will build and explain a small music recommender system.
+Aura is a music recommender that scores songs against a user's taste profile and returns the five best matches with a plain-language explanation for each.
 
-Your goal is to:
+You describe what you want — genre, mood, energy level, tempo, and whether you like acoustic music — and Aura ranks every song in the catalog by how well it fits. Each result tells you exactly which features drove the score.
 
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
-
-Replace this paragraph with your own summary of what your version does.
+The project also includes adversarial tests that expose real bugs in the scoring logic, a model card documenting limitations and bias, and a reflection on what a simple algorithm can and can't do.
 
 ---
 
@@ -168,10 +163,9 @@ Read and complete `model_card.md`:
 
 [**Model Card**](model_card.md)
 
-Write 1 to 2 paragraphs here about what you learned:
+A recommender system is just arithmetic with good labels. Each song gets a number, the numbers get sorted, and the top five come out. What makes it feel intelligent is the explanation — seeing "mood match — happy" next to a score makes it seem like the system understood you. But strip the labels away and it's subtraction and multiplication. Building this made that gap between appearance and reality very concrete.
 
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
+Bias showed up in places I didn't expect. The worst case wasn't a bug in the formula — it was a gap in the data. The Jazz Café profile returned one great result and four lofi songs because there was only one jazz song in the catalog. No scoring logic can fix that. The system was also quietly biased toward upbeat content through the valence tiebreaker: every tie resolved toward happier songs, regardless of what the user asked for. That kind of hidden default is easy to miss because it only surfaces in edge cases, not in normal runs.
 
 
 ---

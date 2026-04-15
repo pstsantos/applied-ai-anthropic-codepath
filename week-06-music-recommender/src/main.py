@@ -18,11 +18,11 @@ def main() -> None:
     # Taste profile — keys match the scoring tiers in the README:
     # P1: genre, mood  |  P2: energy, valence  |  P3: danceability, tempo_bpm
     user_prefs = {
-        "genre": ["pop", "indie pop"],        # P1 — similar genres treated as equal matches
-        "mood": ["happy", "nostalgic"],       # P1 — emotionally close moods grouped together
-        "target_energy": 0.80,               # P2 — how energetic the song should feel
-        "target_valence": 0.85,              # P2 — how positive/upbeat the song should feel
-        "target_danceability": 0.80,         # P3 — how danceable
+        "genre": ["rap"],        # P1 — similar genres treated as equal matches
+        "mood": ["happy", "intense"],       # P1 — emotionally close moods grouped together
+        "target_energy": 0.50,               # P2 — how energetic the song should feel
+        "target_valence": 0.50,              # P2 — how positive/upbeat the song should feel
+        "target_danceability": 0.30,         # P3 — how danceable
         "target_tempo_bpm": 120,             # P3 — preferred tempo
         "likes_acoustic": False,             # penalises high acousticness songs
     }
