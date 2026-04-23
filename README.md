@@ -18,6 +18,8 @@ Weekly hands-on exercises from the **Applied AI** course, a collaboration betwee
 | 05 | [Mood Machine](./week-05-mood-machine) | Text classification, rule-based vs ML models, bias & fairness, model cards |
 | 06 | [Music Recommender](./week-06-music-recommender) | Recommendation systems, simulation, music data |
 | 07 | [DocuBot](./week-07-docubot) | Documentation assistant, RAG, LLM integration, evaluation |
+| 08 | Music Recommender (cont.) | Continuation of music recommendation — recommendation systems, simulation, music data |
+| 09 | [BugHound](./week-09-bughound) | Agent-style debugging, LLM + heuristic fallbacks, risk scoring, reliability guardrails |
 
 *Updated weekly throughout the course.*
 
